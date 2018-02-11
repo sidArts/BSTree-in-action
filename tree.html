@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<link rel="stylesheet" type="text/css" href="/tree.css">
+	<script type="text/javascript" src="angular.js"></script>
+	
+</head>
+<body ng-app="app" ng-controller="appController">
+	<input type="text" ng-model="newNodeData"> 
+	<button ng-click="addNode(newNodeData)">Add New Node</button>
+<div class="tree">
+	<ul ng-if="tree != null">
+		<li>
+			<a href="javascript:void(0);">{{tree.data}}</a>
+			<tree ng-if="tree.left != null || tree.right != null" node="tree"></tree>
+		</li>
+	</ul>
+
+</div>
+<script type="text/javascript">
+		angular.module('app',[])
+		.controller('appController', function($scope, $http) {
+			$scope.isEmpty = angular.isEmpty;
+			$scope.tree = {
+				left: { 
+					left: { left: null, data: 1, right: null }, 
+					data: 3, 
+					right: { left: null, data: 4, right: null }
+				},
+				data: 5,
+				right: { left: null, data: 7, right: null }
+			};
+
+			var placeNewNode = function(node, data) {
+				if(node.data > data) {
+					if(node.left == null) {						
+						node.left = { left: null, data: data, right: null };
+						return;
+					} else {
+						placeNewNode(node.left, data);	
+					}
+					
+				} else if(node.data < data) {
+					if(node.right == null) {						
+						node.right = { left: null, data: data, right: null };
+						return;
+					} else {
+						placeNewNode(node.right, data);	
+					}
+				} else {
+					alert('Node already present!')
+				}
+			};
+
+			$scope.addNode = function(data) {
+				placeNewNode($scope.tree, data);
+			};
+		})
+		.directive('tree', function() {
+			return {
+				template: 	'<ul>' + 
+								'<li ng-if="node.left != null">'+
+									'<a href="javascript:void(0);">'+
+										'{{node.left.data}}'+
+									'</a>'+
+									'<tree ng-if="node.left.left != null || node.left.right != null" node="node.left"></tree>' +
+								'</li>' +
+								'<li ng-if="node.right != null">'+
+									'<a href="javascript:void(0);">'+
+										'{{node.right.data}}'+
+									'</a>'+
+									'<tree ng-if="node.right.left != null || node.right.right != null" node="node.right"></tree>' +
+								'</li>' +
+							'</ul>',
+				restrict: 'E',
+				replace: true,
+				scope: {
+					node: '='
+				}
+			}
+		});
+	</script>
+</body>
+</html>
