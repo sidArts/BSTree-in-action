@@ -9,6 +9,9 @@
 <body ng-app="app" ng-controller="appController">
 	<input type="text" ng-model="newNodeData"> 
 	<button ng-click="addNode(newNodeData)">Add New Node</button>
+	<p>Pre-order : {{preorder|json}}</p>
+	<p>Post-order : {{postorder|json}}</p>
+	<p>In-order : {{inorder|json}}</p>
 <div class="tree">
 	<ul ng-if="tree != null">
 		<li>
@@ -22,6 +25,9 @@
 		angular.module('app',[])
 		.controller('appController', function($scope, $http) {
 			$scope.isEmpty = angular.isEmpty;
+			$scope.preorder = [];
+			$scope.postorder = [];
+			$scope.inorder = [];
 			$scope.tree = {
 				left: { 
 					left: { left: null, data: 1, right: null }, 
@@ -35,7 +41,7 @@
 			var placeNewNode = function(node, data) {
 				if(node.data > data) {
 					if(node.left == null) {						
-						node.left = { left: null, data: data, right: null };
+						node.left = { left: null, data: ((typeof parseInt(data) == 'number') ? parseInt(data) : data ), right: null };
 						return;
 					} else {
 						placeNewNode(node.left, data);	
@@ -43,7 +49,7 @@
 					
 				} else if(node.data < data) {
 					if(node.right == null) {						
-						node.right = { left: null, data: data, right: null };
+						node.right = { left: null, data: ((typeof parseInt(data) == 'number') ? parseInt(data) : data ), right: null };
 						return;
 					} else {
 						placeNewNode(node.right, data);	
@@ -55,7 +61,46 @@
 
 			$scope.addNode = function(data) {
 				placeNewNode($scope.tree, data);
+				$scope.preorder = [];
+				$scope.postorder = [];
+				$scope.inorder = [];
+				preOrder($scope.tree);
+				postOrder($scope.tree);
+				inOrder($scope.tree);
 			};
+
+			var preOrder = function(node) {
+				$scope.preorder.push(node.data);
+				if(node.left != null) {
+					preOrder(node.left);
+				}				
+				if(node.right != null) {
+					preOrder(node.right);
+				}
+			};
+			var postOrder = function(node) {
+				if(node.left != null) {
+					postOrder(node.left);
+				}				
+				if(node.right != null) {
+					postOrder(node.right);
+				}
+				$scope.postorder.push(node.data);
+			};
+			var inOrder = function(node) {
+				
+				if(node.left != null) {
+					inOrder(node.left);
+				}				
+				$scope.inorder.push(node.data);
+				if(node.right != null) {
+					inOrder(node.right);
+				}
+				
+			};
+			preOrder($scope.tree);
+			postOrder($scope.tree);
+			inOrder($scope.tree);
 		})
 		.directive('tree', function() {
 			return {
