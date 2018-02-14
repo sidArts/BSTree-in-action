@@ -80,6 +80,7 @@ var Queue = function(length) {
 angular.module('app',[])
 .controller('appController', function($scope, $http) {
 	$scope.isEmpty = angular.isEmpty;
+	$scope.bfsTraversal = [];
 	$scope.preorder = [];
 	$scope.postorder = [];
 	$scope.inorder = [];
@@ -114,12 +115,14 @@ angular.module('app',[])
 		}
 	};
 
-	var queue = new Queue(10);
-	queue.enqueue($scope.tree);
-	var treeTraversalBFS = function() {		
+	
+	var treeTraversalBFS = function() {
+		var queue = new Queue(10);
+		queue.enqueue($scope.tree);
+		$scope.bfsTraversal = [];
 		while(!queue.isEmpty()) {
 			var node = queue.dequeue();			
-			console.log(node.data);
+			$scope.bfsTraversal.push(node.data);
 			if(node.left != null) {
 				queue.enqueue(node.left);
 			}
@@ -137,6 +140,7 @@ angular.module('app',[])
 		preOrder($scope.tree);
 		postOrder($scope.tree);
 		inOrder($scope.tree);
+		treeTraversalBFS();
 	};
 
 	var preOrder = function(node) {
@@ -172,7 +176,7 @@ angular.module('app',[])
 	postOrder($scope.tree);
 	inOrder($scope.tree);
 
-	treeTraversalBFS($scope.tree);
+	treeTraversalBFS();
 })
 .directive('tree', function() {
 	return {
