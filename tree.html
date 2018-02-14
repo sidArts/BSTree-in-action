@@ -12,6 +12,7 @@
 	<p>Pre-order : {{preorder|json}}</p>
 	<p>Post-order : {{postorder|json}}</p>
 	<p>In-order : {{inorder|json}}</p>
+	<p>BFS Traversal : {{bfsTraversal|json}}</p>
 <div class="tree">
 	<ul ng-if="tree != null">
 		<li>
@@ -22,109 +23,180 @@
 
 </div>
 <script type="text/javascript">
-		angular.module('app',[])
-		.controller('appController', function($scope, $http) {
-			$scope.isEmpty = angular.isEmpty;
-			$scope.preorder = [];
-			$scope.postorder = [];
-			$scope.inorder = [];
-			$scope.tree = {
-				left: { 
-					left: { left: null, data: 1, right: null }, 
-					data: 3, 
-					right: { left: null, data: 4, right: null }
-				},
-				data: 5,
-				right: { left: null, data: 7, right: null }
-			};
 
-			var placeNewNode = function(node, data) {
-				if(node.data > data) {
-					if(node.left == null) {						
-						node.left = { left: null, data: ((typeof parseInt(data) == 'number') ? parseInt(data) : data ), right: null };
-						return;
-					} else {
-						placeNewNode(node.left, data);	
-					}
-					
-				} else if(node.data < data) {
-					if(node.right == null) {						
-						node.right = { left: null, data: ((typeof parseInt(data) == 'number') ? parseInt(data) : data ), right: null };
-						return;
-					} else {
-						placeNewNode(node.right, data);	
-					}
-				} else {
-					alert('Node already present!')
-				}
-			};
+var Queue = function(length) {
+	var _length = length;
+	var _list = [];
+	var _end  = 0;
 
-			$scope.addNode = function(data) {
-				placeNewNode($scope.tree, data);
-				$scope.preorder = [];
-				$scope.postorder = [];
-				$scope.inorder = [];
-				preOrder($scope.tree);
-				postOrder($scope.tree);
-				inOrder($scope.tree);
-			};
+	this.enqueue = function(data) {
+		if(_end !== _length) {
+			_list[_end++] = data;
+		}		
+	}
 
-			var preOrder = function(node) {
-				$scope.preorder.push(node.data);
-				if(node.left != null) {
-					preOrder(node.left);
-				}				
-				if(node.right != null) {
-					preOrder(node.right);
+	this.dequeue = function() {
+		var elem = _list[0];
+		if(_end !== 0) {
+			if(_end > 1) {
+				for(var i = 1; i < _end; ++i ) {
+					_list[i - 1] = _list[i];
 				}
-			};
-			var postOrder = function(node) {
-				if(node.left != null) {
-					postOrder(node.left);
-				}				
-				if(node.right != null) {
-					postOrder(node.right);
-				}
-				$scope.postorder.push(node.data);
-			};
-			var inOrder = function(node) {
-				
-				if(node.left != null) {
-					inOrder(node.left);
-				}				
-				$scope.inorder.push(node.data);
-				if(node.right != null) {
-					inOrder(node.right);
-				}
-				
-			};
-			preOrder($scope.tree);
-			postOrder($scope.tree);
-			inOrder($scope.tree);
-		})
-		.directive('tree', function() {
-			return {
-				template: 	'<ul>' + 
-								'<li ng-if="node.left != null">'+
-									'<a href="javascript:void(0);">'+
-										'{{node.left.data}}'+
-									'</a>'+
-									'<tree ng-if="node.left.left != null || node.left.right != null" node="node.left"></tree>' +
-								'</li>' +
-								'<li ng-if="node.right != null">'+
-									'<a href="javascript:void(0);">'+
-										'{{node.right.data}}'+
-									'</a>'+
-									'<tree ng-if="node.right.left != null || node.right.right != null" node="node.right"></tree>' +
-								'</li>' +
-							'</ul>',
-				restrict: 'E',
-				replace: true,
-				scope: {
-					node: '='
-				}
+				delete _list[_end];
+				--_end;
+			} else {
+				_list = [];
+				_end = 0;
+			}			
+		}
+		
+		return elem;
+	}
+
+	this.peek = function() {
+		if(_end !== 0) {
+			return _list[0];
+		}
+	};
+
+	this.isEmpty = function() {
+		return (_list.length == 0);
+	};
+
+	this.display = function( ) {
+		if(_end !== 0) {
+			return _list.slice(0, _end).join(',');
+		}
+	};
+
+	this.getList = function() {
+		return _list;
+	}
+
+};
+
+
+
+angular.module('app',[])
+.controller('appController', function($scope, $http) {
+	$scope.isEmpty = angular.isEmpty;
+	$scope.preorder = [];
+	$scope.postorder = [];
+	$scope.inorder = [];
+	$scope.tree = {
+		left: { 
+			left: { left: null, data: 1, right: null }, 
+			data: 3, 
+			right: { left: null, data: 4, right: null }
+		},
+		data: 5,
+		right: { left: null, data: 7, right: null }
+	};
+
+	var placeNewNode = function(node, data) {
+		if(node.data > data) {
+			if(node.left == null) {						
+				node.left = { left: null, data: ((typeof parseInt(data) == 'number') ? parseInt(data) : data ), right: null };
+				return;
+			} else {
+				placeNewNode(node.left, data);	
 			}
-		});
-	</script>
+			
+		} else if(node.data < data) {
+			if(node.right == null) {						
+				node.right = { left: null, data: ((typeof parseInt(data) == 'number') ? parseInt(data) : data ), right: null };
+				return;
+			} else {
+				placeNewNode(node.right, data);	
+			}
+		} else {
+			alert('Node already present!')
+		}
+	};
+
+	var queue = new Queue(10);
+	queue.enqueue($scope.tree);
+	var treeTraversalBFS = function() {		
+		while(!queue.isEmpty()) {
+			var node = queue.dequeue();			
+			console.log(node.data);
+			if(node.left != null) {
+				queue.enqueue(node.left);
+			}
+			if(node.right != null) {
+				queue.enqueue(node.right);
+			}
+		}	
+	};
+
+	$scope.addNode = function(data) {
+		placeNewNode($scope.tree, data);
+		$scope.preorder = [];
+		$scope.postorder = [];
+		$scope.inorder = [];
+		preOrder($scope.tree);
+		postOrder($scope.tree);
+		inOrder($scope.tree);
+	};
+
+	var preOrder = function(node) {
+		$scope.preorder.push(node.data);
+		if(node.left != null) {
+			preOrder(node.left);
+		}				
+		if(node.right != null) {
+			preOrder(node.right);
+		}
+	};
+	var postOrder = function(node) {
+		if(node.left != null) {
+			postOrder(node.left);
+		}				
+		if(node.right != null) {
+			postOrder(node.right);
+		}
+		$scope.postorder.push(node.data);
+	};
+	var inOrder = function(node) {
+		
+		if(node.left != null) {
+			inOrder(node.left);
+		}				
+		$scope.inorder.push(node.data);
+		if(node.right != null) {
+			inOrder(node.right);
+		}
+		
+	};
+	preOrder($scope.tree);
+	postOrder($scope.tree);
+	inOrder($scope.tree);
+
+	treeTraversalBFS($scope.tree);
+})
+.directive('tree', function() {
+	return {
+		template: 	'<ul>' + 
+						'<li ng-if="node.left != null">'+
+							'<a href="javascript:void(0);">'+
+								'{{node.left.data}}'+
+							'</a>'+
+							'<tree ng-if="node.left.left != null || node.left.right != null" node="node.left"></tree>' +
+						'</li>' +
+						'<li ng-if="node.right != null">'+
+							'<a href="javascript:void(0);">'+
+								'{{node.right.data}}'+
+							'</a>'+
+							'<tree ng-if="node.right.left != null || node.right.right != null" node="node.right"></tree>' +
+						'</li>' +
+					'</ul>',
+		restrict: 'E',
+		replace: true,
+		scope: {
+			node: '='
+		}
+	}
+});
+</script>
 </body>
 </html>
