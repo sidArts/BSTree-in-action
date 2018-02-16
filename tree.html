@@ -13,6 +13,7 @@
 	<p>Post-order : {{postorder|json}}</p>
 	<p>In-order : {{inorder|json}}</p>
 	<p>BFS Traversal : {{bfsTraversal|json}}</p>
+	<p>DFS Traversal : {{dfsTraversal|json}}</p>
 <div class="tree">
 	<ul ng-if="tree != null">
 		<li>
@@ -81,6 +82,7 @@ angular.module('app',[])
 .controller('appController', function($scope, $http) {
 	$scope.isEmpty = angular.isEmpty;
 	$scope.bfsTraversal = [];
+	$scope.dfsTraversal = [];
 	$scope.preorder = [];
 	$scope.postorder = [];
 	$scope.inorder = [];
@@ -132,6 +134,20 @@ angular.module('app',[])
 		}	
 	};
 
+	var stack = [$scope.tree];
+	var treeTraversalDFS = function(stack) {
+		if(stack.length == 0)
+			return;
+		var node = stack.pop();
+		console.log(node.data);
+		$scope.dfsTraversal.push(node.data);
+		if(node.right != null)
+			stack.push(node.right); 
+		if(node.left != null)
+			stack.push(node.left);
+		treeTraversalDFS(stack);
+	};
+
 	$scope.addNode = function(data) {
 		placeNewNode($scope.tree, data);
 		$scope.preorder = [];
@@ -141,6 +157,8 @@ angular.module('app',[])
 		postOrder($scope.tree);
 		inOrder($scope.tree);
 		treeTraversalBFS();
+		$scope.dfsTraversal = [];
+		treeTraversalDFS([$scope.tree]);
 	};
 
 	var preOrder = function(node) {
@@ -177,6 +195,7 @@ angular.module('app',[])
 	inOrder($scope.tree);
 
 	treeTraversalBFS();
+	treeTraversalDFS(stack);
 })
 .directive('tree', function() {
 	return {
